@@ -1,0 +1,7 @@
+# Ignore environment files
+.env
+
+# Ignore cache directories
+__pycache__/
+
+.idea
