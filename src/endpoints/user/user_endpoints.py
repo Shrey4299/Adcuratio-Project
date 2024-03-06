@@ -1,23 +1,38 @@
-from typing import Annotated, Optional
+from typing import Annotated
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from starlette.responses import JSONResponse
-from src.database.schema import User
-from src.database.models import UserSignUp, UserSignIn, UserResponse
-from fastapi import APIRouter, Cookie, HTTPException, Header, status, Request, Query
+
 from src.database.connection import Session
-from fastapi.encoders import jsonable_encoder
+from src.database.models import UserResponse, UserSignIn, UserSignUp
+from src.database.schema import User
 
 user_router = APIRouter(tags=["users"], prefix="/users")
 
 
+async def method_finder(request: Request):
+    method_name = request.method
+    return method_name
+
+
+
 @user_router.get("/", response_model=UserResponse)
-async def get_user() -> JSONResponse:
+async def get_user(
+    api_method: Annotated[dict, Depends(method_finder)]
+) -> JSONResponse:
     """
     Retrieve a User by Name or Phone Number.
+
+    Query Param:
+    - None
+
+    Parameters:
+    - None
 
     Returns:
       - 200 OK: List of users.
       - 404 Not Found: If no user is found matching the query parameters.
     """
+    print(api_method + ' : this is the api method')
     session = Session()
     query = session.query(User)
 
@@ -47,7 +62,7 @@ async def get_user() -> JSONResponse:
         )
 
 
-@user_router.get("/by-name", response_model=UserResponse)
+@user_router.get("/by-detail", response_model=UserResponse)
 async def get_user_by_name(
     name: str = Query(None, description="user name"),
     phone_number: str = Query(None, description="user phone number"),
@@ -96,7 +111,7 @@ async def get_user_by_name(
 
 
 @user_router.post("/signup", response_model=UserResponse)
-async def create_user(user_data: UserSignUp) -> JSONResponse:
+async def create_user(user_data: UserSignUp, request: Request) -> JSONResponse:
     """
     Sign Up a User.
 
@@ -112,7 +127,13 @@ async def create_user(user_data: UserSignUp) -> JSONResponse:
     """
     session = Session()
 
-    user_with_email = session.query(User).filter(User.email == user_data.email).first()
+    data = await request.json()
+    email = data.get("email")
+    phone_number = data.get("phone_number")
+
+    print(data)
+
+    user_with_email = session.query(User).filter(User.email == email).first()
     if user_with_email:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -120,7 +141,7 @@ async def create_user(user_data: UserSignUp) -> JSONResponse:
         )
 
     user_with_phone = (
-        session.query(User).filter(User.phone_number == user_data.phone_number).first()
+        session.query(User).filter(User.phone_number == phone_number).first()
     )
     if user_with_phone:
         raise HTTPException(
@@ -129,14 +150,16 @@ async def create_user(user_data: UserSignUp) -> JSONResponse:
         )
 
     # Create a new user
-    user = User(**user_data.dict())
+    user = User(**data)
     session.add(user)
     session.commit()
     session.refresh(user)
 
     print(type(user))
 
-    user_list = [{"user_name": user.name, "email": user.email, "phone_number": user.phone_number}]
+    user_list = [
+        {"user_name": user.name, "email": user.email, "phone_number": user.phone_number}
+    ]
 
     print(type(user_list))
 
@@ -152,8 +175,8 @@ async def create_user(user_data: UserSignUp) -> JSONResponse:
     return JSONResponse(content=response.dict(), status_code=status.HTTP_200_OK)
 
 
-@user_router.post("/signin")
-async def signin_user(user_data: UserSignIn):
+@user_router.post("/signin", response_model=UserResponse)
+async def signin_user(user_data: UserSignIn, request: Request) -> JSONResponse:
     """
     Sign In a User.
 
@@ -166,26 +189,35 @@ async def signin_user(user_data: UserSignIn):
       - 401 Unauthorized: If the password is incorrect.
       - 404 Not Found: If the user with the provided email does not exist.
     """
+    # Extracting email and password from the request body
+    data = await request.json()
+    email = data.get("email")
+    password = data.get("password")
+
+    if not email or not password:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email and password are required",
+        )
+
     session = Session()
-    user = session.query(User).filter(User.email == user_data.email).first()
+    user = session.query(User).filter(User.email == email).first()
     if user:
-        if user.password == user_data.password:
-            print(type(user))
-
+        if user.password == password:
             user_list = [
-                {"user_name": user.name, "email": user.email, "phone_number": user.phone_number}
+                {
+                    "user_name": user.name,
+                    "email": user.email,
+                    "phone_number": user.phone_number,
+                }
             ]
-
-            print(type(user_list))
 
             response = UserResponse(
                 success=True,
-                message="Users logged in  successfully",
+                message="Users logged in successfully",
                 data=user_list,
                 status_code=status.HTTP_200_OK,
             )
-
-            print(response)
 
             return JSONResponse(content=response.dict(), status_code=status.HTTP_200_OK)
         else:

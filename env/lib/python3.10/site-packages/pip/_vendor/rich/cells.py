@@ -1,5 +1,5 @@
-from functools import lru_cache
 import re
+from functools import lru_cache
 from typing import Dict, List
 
 from ._cell_widths import CELL_WIDTHS

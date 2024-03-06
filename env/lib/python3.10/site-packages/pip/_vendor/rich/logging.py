@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import ClassVar, List, Optional, Type, Union
 
 from . import get_console
-from ._log_render import LogRender, FormatTimeCallable
+from ._log_render import FormatTimeCallable, LogRender
 from .console import Console, ConsoleRenderable
 from .highlighter import Highlighter, ReprHighlighter
 from .text import Text

@@ -1,7 +1,6 @@
 from collections import OrderedDict
 from typing import Dict, Generic, TypeVar
 
-
 CacheKey = TypeVar("CacheKey")
 CacheValue = TypeVar("CacheValue")
 
