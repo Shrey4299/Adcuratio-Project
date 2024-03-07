@@ -14,8 +14,9 @@ async def method_finder(request: Request):
     return method_name
 
 
-
-@user_router.get("/", response_model=UserResponse)
+@user_router.get(
+    "/", response_model=UserResponse, dependencies=[Depends(method_finder)]
+)
 async def get_user(
     api_method: Annotated[dict, Depends(method_finder)]
 ) -> JSONResponse:
