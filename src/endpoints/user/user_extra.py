@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from starlette.responses import JSONResponse
+
 from src.database.connection import Session
 from src.database.models import UserResponse, UserUpdate
 from src.database.schema import User
