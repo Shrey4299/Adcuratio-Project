@@ -206,9 +206,7 @@ async def signin_user(signin_data: UserSignIn, request: Request) -> JSONResponse
 
 
 @user_router.get("/get-me", response_model=UserResponse)
-async def get_user(
-    request: Request, jwt_token: Annotated[str | None, Header()] = None
-) -> JSONResponse:
+async def get_user(user_id: Annotated[User, Depends(verify_token)]) -> JSONResponse:
     """
     Retrieve a User by ID encoded in JWT token.
 
@@ -218,17 +216,7 @@ async def get_user(
       - 404 Not Found: If the user with the provided ID does not exist.
     """
 
-    try:
-        print(jwt_token)
-        user_id = verify_token(
-            jwt_token,
-            credentials_exception=HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Could not validate credentials",
-            ),
-        )
-    except HTTPException as e:
-        raise e
+
 
     if user_id is not None:
         session = Session()

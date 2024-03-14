@@ -1,3 +1,4 @@
+from typing import Annotated
 import nltk
 import requests
 from bs4 import BeautifulSoup
@@ -7,19 +8,22 @@ from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from starlette.responses import JSONResponse
 
+from src.auth.token_access import verify_token
 from src.common.helper import (create_description_word_count,
                                create_generalised_description,
                                extract_post_data, fetch_content)
 from src.database.connection import Session
 from src.database.models import WebscrapResponse
-from src.database.schema import (GeneralisedDescription, GeneralisedWordCount,
+from src.database.schema import (GeneralisedDescription, GeneralisedWordCount, User,
                                  WebScraper)
 
 hacker_news_router = APIRouter(tags=["hacker news api"], prefix="/hackernews")
 
 
 @hacker_news_router.get("/", response_model=WebscrapResponse)
-async def get_hacker_news_data() -> JSONResponse:
+async def get_hacker_news_data(
+    current_user: Annotated[User, Depends(verify_token)]
+) -> JSONResponse:
     """
     Retrieve a webscrap.
 
