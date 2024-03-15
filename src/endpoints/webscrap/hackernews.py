@@ -70,7 +70,10 @@ async def get_hacker_news_data(
 
 
 @hacker_news_router.post("/", response_model=WebscrapResponse)
-async def create_hacker_news_entries(n: int = Query(..., gt=0)) -> JSONResponse:
+async def create_hacker_news_entries(
+    n: int = Query(..., gt=0), current_user: User = Depends(verify_token)
+) -> JSONResponse:
+
     """
     Scrape and create new web scraping entries.
 
@@ -148,7 +151,8 @@ async def create_hacker_news_entries(n: int = Query(..., gt=0)) -> JSONResponse:
 
 @hacker_news_router.get("/search/", response_model=WebscrapResponse)
 async def search_links_by_keyword(
-    keyword: str = Query(..., title="Keyword to search")
+    keyword: str = Query(..., title="Keyword to search"),
+    current_user: User = Depends(verify_token),
 ) -> JSONResponse:
     """
     Search links in the database by keyword.

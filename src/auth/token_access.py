@@ -20,12 +20,24 @@ def create_access_token(user_id: int, expires_delta: timedelta | None = None):
     return encoded_jwt
 
 
-def verify_token(request: Request, token: Annotated[str | None, Header()] = None):
+def verify_token(
+    request: Request,
+    token: Annotated[str | None, Header(description="Bearer token")] = None,
+):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
     )
+    bearer_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Token should be Bearer token",
+    )
     try:
+        if token is None:
+            raise credentials_exception
+        if not token.startswith("Bearer "):
+            raise bearer_exception
+
         bearer_token = token.split(" ")[1]
         payload = jwt.decode(bearer_token, SECRET_KEY, algorithms=[ALGORITHM])
 

@@ -249,7 +249,4 @@ async def get_user(user_id: Annotated[User, Depends(verify_token)]) -> JSONRespo
         )
 
 
-@user_router.get("/sample/")
-async def read_items(token: Annotated[str | None, Header()] = None):
-    print(token)
-    return {"token": token}
+

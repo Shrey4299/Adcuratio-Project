@@ -1,6 +1,8 @@
+from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from starlette.responses import JSONResponse
 
+from src.auth.token_access import verify_token
 from src.database.connection import Session
 from src.database.models import UserResponse, UserUpdate
 from src.database.schema import User
@@ -9,7 +11,9 @@ user_router_extra = APIRouter(tags=["users_extra"], prefix="/users")
 
 
 @user_router_extra.get("/{user_id}", response_model=UserResponse)
-async def get_user(user_id: int) -> JSONResponse:
+async def get_user(
+    user_id: int, current_user: Annotated[User, Depends(verify_token)]
+) -> JSONResponse:
     """
     Retrieve a User by ID.
 
@@ -47,7 +51,8 @@ async def get_user(user_id: int) -> JSONResponse:
 
 @user_router_extra.put("/{user_id}", response_model=UserResponse)
 async def update_user(
-    user_data: UserUpdate, request: Request, user_id: int
+    current_user: Annotated[User, Depends(verify_token)],
+    user_data: UserUpdate, request: Request, user_id: int, 
 ) -> JSONResponse:
     """
     Update a User.
@@ -113,7 +118,11 @@ async def update_user(
 
 
 @user_router_extra.delete("/{user_id}")
-async def delete_user(user_id: int) -> JSONResponse:
+
+
+async def delete_user(
+    user_id: int, current_user: Annotated[User, Depends(verify_token)]
+) -> JSONResponse:
     """
     Delete a User.
 

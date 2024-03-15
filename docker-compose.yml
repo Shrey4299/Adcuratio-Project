@@ -1,36 +1,25 @@
-# version: '3.7'
-
-# services:
-#   user-project:
-#     build:
-#       context: .
-#       dockerfile: Dockerfile
-#     # restart: always
-#     command: uvicorn main:app --workers 1 --host 0.0.0.0
-#     volumes:
-#       - .:/app
-#     ports:
-#       - 8003:8000
-#     env_file:
-#       - .env
-#     depends_on:
-#       - postgres_db
-
-#   postgres_db:
-#     image: postgres:latest
-#     container_name: PostgresCont
-#     # restart: always
-#     environment:
-#       - POSTGRES_USER=shrey
-#       - POSTGRES_PASSWORD=Sonu619
-#       - POSTGRES_DB=Ecommerce
-#     ports:
-#       - '5431:5431'
-#     volumes:
-#       - postgres_db:/var/lib/postgresql/data
-#     command: >
-#       sh -c "sleep 10 && psql -h localhost -U shrey -d postgres -c 'CREATE DATABASE Ecommerce'"
-
-# volumes:
-#   postgres_db:
-#     driver: local
+services:
+  web:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    # network_mode: host
+    ports:
+      - '8000:8000'
+    depends_on:
+      - postgres
+    # command: ['uvicorn','main:app','--host','127.0.0.1','--port','8000','--reload']
+    # command: uvicorn main:app 
+    command: uvicorn main:app --host 0.0.0.0 
+  
+  postgres:
+    image: postgres:alpine
+    restart: always
+    # network_mode: host
+    ports:
+      - '5433:5432'
+    environment:
+      - POSTGRES_USER=shrey
+      - POSTGRES_DB=Ecommerce
+      - POSTGRES_PASSWORD=Sonu619 
+    # command: ['sudo','service','postgresql','start']
